@@ -37,7 +37,6 @@ defmodule Phoenix.TemplateTest do
     end
 
     test "compiles all templates at once" do
-      # TODO: Add trim tests once extracted
       assert AllTemplates.show_html_eex(%{message: "hello!"})
              |> Phoenix.HTML.safe_to_string() ==
                "<div>Show! hello!</div>\n"
@@ -52,6 +51,10 @@ defmodule Phoenix.TemplateTest do
 
       assert AllTemplates.show_json_exs(%{}) == %{foo: "bar"}
       assert AllTemplates.show_text_eex(%{message: "hello"}) == "from hello"
+
+      assert AllTemplates.no_trim_text_eex(%{}) == "12\n  34\n56\n"
+      assert AllTemplates.trim_html_eex(%{}) |> Phoenix.HTML.safe_to_string() == "12\n34\n56"
+
       refute AllTemplates.__mix_recompile__?()
     end
 
