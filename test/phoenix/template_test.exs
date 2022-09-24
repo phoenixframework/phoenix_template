@@ -51,11 +51,14 @@ defmodule Phoenix.TemplateTest do
 
       assert AllTemplates.show_json_exs(%{}) == %{foo: "bar"}
       assert AllTemplates.show_text_eex(%{message: "hello"}) == "from hello"
-
-      assert AllTemplates.no_trim_text_eex(%{}) == "12\n  34\n56\n"
-      assert AllTemplates.trim_html_eex(%{}) |> Phoenix.HTML.safe_to_string() == "12\n34\n56"
-
       refute AllTemplates.__mix_recompile__?()
+    end
+
+    if Version.match?(System.version(), ">= 1.12") do
+      test "trims only compiled HTML files" do
+        assert AllTemplates.no_trim_text_eex(%{}) == "12\n  34\n56\n"
+        assert AllTemplates.trim_html_eex(%{}) |> Phoenix.HTML.safe_to_string() == "12\n34\n56"
+      end
     end
 
     defmodule OptionsTemplates do
