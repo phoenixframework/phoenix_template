@@ -131,8 +131,8 @@ defmodule Phoenix.Template do
 
   defp render_within_layout({layout, _assigns}, _module, _template, _format) do
     raise ArgumentError, """
-    invalid value for reserved key :layout in Phoenix.Template.render/4 assigns
-    :layout accepts a tuple of the form {LayoutModule, "template.extension"}
+    invalid value for reserved key :layout in Phoenix.Template.render/4 assigns.
+    :layout accepts a tuple of the form {LayoutModule, "template.extension"},
     got: #{inspect(layout)}
     """
   end
