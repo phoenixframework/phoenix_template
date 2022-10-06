@@ -75,7 +75,7 @@ defmodule Phoenix.Template do
 
     * Raise otherwise
 
-  It expects the HTML module, the template as a string or atom, the format, and a
+  It expects the HTML module, the template as a string, the format, and a
   set of assigns.
 
   Notice that this function returns the inner representation of a
@@ -83,9 +83,6 @@ defmodule Phoenix.Template do
   `render_to_iodata/4` instead.
 
   ## Examples
-
-      Phoenix.Template.render(YourApp.UserView, :index, "html", name: "John Doe")
-      #=> {:safe, "Hello John Doe"}
 
       Phoenix.Template.render(YourApp.UserView, "index", "html", name: "John Doe")
       #=> {:safe, "Hello John Doe"}
@@ -103,7 +100,7 @@ defmodule Phoenix.Template do
 
   Templates can be rendered within other templates using the `:layout`
   option. `:layout` accepts a tuple of the form
-  `{LayoutModule, "template.extension"} | {LayoutModule, :template}`.
+  `{LayoutModule, "template.extension"}`.
 
   To template that goes inside the layout will be placed in the `@inner_content`
   assign:
@@ -123,7 +120,7 @@ defmodule Phoenix.Template do
   end
 
   defp render_within_layout({{layout_mod, layout_tpl}, assigns}, module, template, format)
-       when is_atom(layout_mod) and (is_binary(layout_tpl) or is_atom(layout_tpl)) do
+       when is_atom(layout_mod) and is_binary(layout_tpl) do
     content = render_with_fallback(module, template, format, assigns)
     assigns = Map.put(assigns, :inner_content, content)
     render_with_fallback(layout_mod, layout_tpl, format, assigns)
@@ -137,22 +134,13 @@ defmodule Phoenix.Template do
     """
   end
 
-  defp template_with_ext(template, format), do: to_string(template) <> "." <> format
+  defp template_with_ext(template, format), do: template <> "." <> format
 
   defp encode(content, template_with_ext) do
     if encoder = format_encoder(template_with_ext) do
       encoder.encode_to_iodata!(content)
     else
       content
-    end
-  end
-
-  defp render_with_fallback(module, template, format, assigns)
-       when is_atom(module) and is_atom(template) and is_binary(format) and is_map(assigns) do
-    if function_exported?(module, template, 1) do
-      apply(module, template, [assigns])
-    else
-      fallback_render(module, template, format, assigns)
     end
   end
 
@@ -165,7 +153,12 @@ defmodule Phoenix.Template do
     catch
       _, _ -> fallback_render(module, template, format, assigns)
     else
-      atom -> render_with_fallback(module, atom, format, assigns)
+      atom ->
+        if function_exported?(module, atom, 1) do
+          apply(module, atom, [assigns])
+        else
+          fallback_render(module, template, format, assigns)
+        end
     end
   end
 
