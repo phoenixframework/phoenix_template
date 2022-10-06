@@ -96,5 +96,61 @@ defmodule Phoenix.TemplateTest do
 
       refute OptionsTemplates.__mix_recompile__?()
     end
+
+    test "render/4" do
+      assert Template.render(AllTemplates, :show_html_eex, "html", %{message: "hello!"}) ==
+               {:safe, ["<div>Show! ", "hello!", "</div>\n"]}
+
+      assert Template.render(AllTemplates, "show_html_eex", "html", %{message: "hello!"}) ==
+               {:safe, ["<div>Show! ", "hello!", "</div>\n"]}
+    end
+
+    test "render/4 with layout" do
+      assigns = %{message: "hello!", layout: {AllTemplates, :layout_html_eex}}
+
+      assert Template.render(AllTemplates, :show_html_eex, "html", assigns) ==
+               {:safe, ["<html>", ["<div>Show! ", "hello!", "</div>\n"], "</html>"]}
+
+      assigns = %{message: "hello!", layout: {AllTemplates, "layout_html_eex"}}
+
+      assert Template.render(AllTemplates, :show_html_eex, "html", assigns) ==
+               {:safe, ["<html>", ["<div>Show! ", "hello!", "</div>\n"], "</html>"]}
+    end
+
+    test "render/4 with bad layout" do
+      msg = ~r/no "bad_layout" html template defined for Phoenix.TemplateTest.AllTemplates/
+
+      assert_raise ArgumentError, msg, fn ->
+        assigns = %{message: "hello!", layout: {AllTemplates, :bad_layout}}
+        Template.render(AllTemplates, :show_html_eex, "html", assigns)
+      end
+
+      assert_raise ArgumentError, msg, fn ->
+        assigns = %{message: "hello!", layout: {AllTemplates, "bad_layout"}}
+        Template.render(AllTemplates, :show_html_eex, "html", assigns)
+      end
+    end
+
+    test "render_to_iodata/4" do
+      assert Template.render_to_iodata(AllTemplates, :show_html_eex, "html", %{message: "hello!"}) ==
+               ["<div>Show! ", "hello!", "</div>\n"]
+
+      assert Template.render_to_iodata(AllTemplates, "show_html_eex", "html", %{message: "hello!"}) ==
+               ["<div>Show! ", "hello!", "</div>\n"]
+    end
+
+    test "render_to_iodata/4 with bad layout" do
+      msg = ~r/no "bad_layout" html template defined for Phoenix.TemplateTest.AllTemplates/
+
+      assert_raise ArgumentError, msg, fn ->
+        assigns = %{message: "hello!", layout: {AllTemplates, :bad_layout}}
+        Template.render_to_iodata(AllTemplates, :show_html_eex, "html", assigns)
+      end
+
+      assert_raise ArgumentError, msg, fn ->
+        assigns = %{message: "hello!", layout: {AllTemplates, "bad_layout"}}
+        Template.render_to_iodata(AllTemplates, :show_html_eex, "html", assigns)
+      end
+    end
   end
 end
