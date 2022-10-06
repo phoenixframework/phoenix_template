@@ -75,7 +75,7 @@ defmodule Phoenix.Template do
 
     * Raise otherwise
 
-  It expects the HTML module, the template as a string, and a
+  It expects the HTML module, the template as a string or atom, the format, and a
   set of assigns.
 
   Notice that this function returns the inner representation of a
