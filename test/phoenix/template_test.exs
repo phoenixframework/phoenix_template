@@ -103,7 +103,7 @@ defmodule Phoenix.TemplateTest do
     end
 
     test "render/4 with layout" do
-      assigns = %{message: "hello!", layout: {AllTemplates, "layout_html_eex"}}
+      assigns = %{message: "hello!", layout: {AllTemplates, "layout_html_eex.html"}}
 
       assert Template.render(AllTemplates, "show_html_eex", "html", assigns) ==
                {:safe, ["<html>", ["<div>Show! ", "hello!", "</div>\n"], "</html>"]}
@@ -113,7 +113,7 @@ defmodule Phoenix.TemplateTest do
       msg = ~r/no "bad_layout" html template defined for Phoenix.TemplateTest.AllTemplates/
 
       assert_raise ArgumentError, msg, fn ->
-        assigns = %{message: "hello!", layout: {AllTemplates, "bad_layout"}}
+        assigns = %{message: "hello!", layout: {AllTemplates, "bad_layout.html"}}
         Template.render(AllTemplates, "show_html_eex", "html", assigns)
       end
     end

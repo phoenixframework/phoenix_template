@@ -121,9 +121,10 @@ defmodule Phoenix.Template do
 
   defp render_within_layout({{layout_mod, layout_tpl}, assigns}, module, template, format)
        when is_atom(layout_mod) and is_binary(layout_tpl) do
+    layout_base = Path.rootname(layout_tpl)
     content = render_with_fallback(module, template, format, assigns)
     assigns = Map.put(assigns, :inner_content, content)
-    render_with_fallback(layout_mod, layout_tpl, format, assigns)
+    render_with_fallback(layout_mod, layout_base, format, assigns)
   end
 
   defp render_within_layout({layout, _assigns}, _module, _template, _format) do
