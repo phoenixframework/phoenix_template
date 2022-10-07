@@ -11,6 +11,7 @@ defmodule Phoenix.Template.EExEngine do
 
   defp options_for(path) do
     "." <> format = path |> Path.rootname() |> Path.extname()
+
     case Phoenix.Template.format_encoder(format) do
       Phoenix.HTML.Engine ->
         unless Code.ensure_loaded?(Phoenix.HTML.Engine) do
