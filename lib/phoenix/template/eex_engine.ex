@@ -10,7 +10,9 @@ defmodule Phoenix.Template.EExEngine do
   end
 
   defp options_for(path) do
-    case Phoenix.Template.format_encoder(Path.rootname(path)) do
+    "." <> format = path |> Path.rootname() |> Path.extname()
+
+    case Phoenix.Template.format_encoder(format) do
       Phoenix.HTML.Engine ->
         unless Code.ensure_loaded?(Phoenix.HTML.Engine) do
           raise "could not load Phoenix.HTML.Engine to use with .html.eex templates. " <>

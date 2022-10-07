@@ -54,14 +54,129 @@ defmodule Phoenix.Template do
     end
   end
 
+  @doc """
+  Renders the template and returns iodata.
+  """
+  def render_to_iodata(module, template, format, assign) do
+    module
+    |> render(template, format, assign)
+    |> encode(format)
+  end
+
+  @doc """
+  Renders template from module.
+
+  For a module called `MyApp.FooHTML` and template "index.html.heex",
+  it will:
+
+    * First attempt to call `MyApp.FooHTML.index(assigns)`
+
+    * Then fallback to `MyApp.FooHTML.render("index.html", assigns)`
+
+    * Raise otherwise
+
+  It expects the HTML module, the template as a string, the format, and a
+  set of assigns.
+
+  Notice that this function returns the inner representation of a
+  template. If you want the encoded template as a result, use
+  `render_to_iodata/4` instead.
+
+  ## Examples
+
+      Phoenix.Template.render(YourApp.UserView, "index", "html", name: "John Doe")
+      #=> {:safe, "Hello John Doe"}
+
+  ## Assigns
+
+  Assigns are meant to be user data that will be available in templates.
+  However, there are keys under assigns that are specially handled by
+  Phoenix, they are:
+
+    * `:layout` - tells Phoenix to wrap the rendered result in the
+      given layout. See next section
+
+  ## Layouts
+
+  Templates can be rendered within other templates using the `:layout`
+  option. `:layout` accepts a tuple of the form
+  `{LayoutModule, "template.extension"}`.
+
+  To template that goes inside the layout will be placed in the `@inner_content`
+  assign:
+
+      <%= @inner_content %>
+
+  """
+  def render(module, template, format, assigns) do
+    assigns
+    |> Map.new()
+    |> Map.pop(:layout, false)
+    |> render_within_layout(module, template, format)
+  end
+
+  defp render_within_layout({false, assigns}, module, template, format) do
+    render_with_fallback(module, template, format, assigns)
+  end
+
+  defp render_within_layout({{layout_mod, layout_tpl}, assigns}, module, template, format)
+       when is_atom(layout_mod) and is_binary(layout_tpl) do
+    content = render_with_fallback(module, template, format, assigns)
+    assigns = Map.put(assigns, :inner_content, content)
+    render_with_fallback(layout_mod, layout_tpl, format, assigns)
+  end
+
+  defp render_within_layout({layout, _assigns}, _module, _template, _format) do
+    raise ArgumentError, """
+    invalid value for reserved key :layout in Phoenix.Template.render/4 assigns.
+    :layout accepts a tuple of the form {LayoutModule, "template.extension"},
+    got: #{inspect(layout)}
+    """
+  end
+
+  defp encode(content, format) do
+    if encoder = format_encoder(format) do
+      encoder.encode_to_iodata!(content)
+    else
+      content
+    end
+  end
+
+  defp render_with_fallback(module, template, format, assigns)
+       when is_atom(module) and is_binary(template) and is_binary(format) and is_map(assigns) do
+    :erlang.module_loaded(module) or :code.ensure_loaded(module)
+
+    try do
+      String.to_existing_atom(template)
+    catch
+      _, _ -> fallback_render(module, template, format, assigns)
+    else
+      atom ->
+        if function_exported?(module, atom, 1) do
+          apply(module, atom, [assigns])
+        else
+          fallback_render(module, template, format, assigns)
+        end
+    end
+  end
+
+  @compile {:inline, fallback_render: 4}
+  defp fallback_render(module, template, format, assigns) do
+    if function_exported?(module, :render, 2) do
+      module.render(template <> "." <> format, assigns)
+    else
+      raise ArgumentError, "no \"#{template}\" #{format} template defined for #{inspect(module)}"
+    end
+  end
+
   ## Configuration API
 
   @doc """
   Returns the format encoder for the given template.
   """
-  @spec format_encoder(path) :: module | nil
-  def format_encoder(path) when is_binary(path) do
-    Map.get(compiled_format_encoders(), Path.extname(path))
+  @spec format_encoder(format :: String.t()) :: module | nil
+  def format_encoder(format) when is_binary(format) do
+    Map.get(compiled_format_encoders(), format)
   end
 
   defp compiled_format_encoders do
@@ -74,7 +189,7 @@ defmodule Phoenix.Template do
           default_encoders()
           |> Keyword.merge(raw_config(:format_encoders, []))
           |> Enum.filter(fn {_, v} -> v end)
-          |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
+          |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
 
         Application.put_env(:phoenix_template, :compiled_format_encoders, encoders)
         encoders
