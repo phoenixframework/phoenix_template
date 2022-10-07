@@ -135,7 +135,7 @@ defmodule Phoenix.Template do
   end
 
   defp encode(content, format) do
-    if encoder = Map.get(compiled_format_encoders(), "." <> format) do
+    if encoder = format_encoder(format) do
       encoder.encode_to_iodata!(content)
     else
       content
@@ -174,9 +174,9 @@ defmodule Phoenix.Template do
   @doc """
   Returns the format encoder for the given template.
   """
-  @spec format_encoder(path) :: module | nil
-  def format_encoder(path) when is_binary(path) do
-    Map.get(compiled_format_encoders(), Path.extname(path))
+  @spec format_encoder(format :: String.t()) :: module | nil
+  def format_encoder(format) when is_binary(format) do
+    Map.get(compiled_format_encoders(), format)
   end
 
   defp compiled_format_encoders do
@@ -189,7 +189,7 @@ defmodule Phoenix.Template do
           default_encoders()
           |> Keyword.merge(raw_config(:format_encoders, []))
           |> Enum.filter(fn {_, v} -> v end)
-          |> Enum.into(%{}, fn {k, v} -> {".#{k}", v} end)
+          |> Enum.into(%{}, fn {k, v} -> {to_string(k), v} end)
 
         Application.put_env(:phoenix_template, :compiled_format_encoders, encoders)
         encoders

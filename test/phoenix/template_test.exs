@@ -23,9 +23,9 @@ defmodule Phoenix.TemplateTest do
   end
 
   test "format_encoder/1 returns the formatter for a given template" do
-    assert Template.format_encoder("hello.html") == Phoenix.HTML.Engine
-    assert Template.format_encoder("hello.js") == Phoenix.HTML.Engine
-    assert Template.format_encoder("hello.unknown") == nil
+    assert Template.format_encoder("html") == Phoenix.HTML.Engine
+    assert Template.format_encoder("js") == Phoenix.HTML.Engine
+    assert Template.format_encoder("unknown") == nil
   end
 
   describe "compile_all/4" do
