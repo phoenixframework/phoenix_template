@@ -60,7 +60,7 @@ defmodule Phoenix.Template do
   def render_to_iodata(module, template, format, assign) do
     module
     |> render(template, format, assign)
-    |> encode(template_with_ext(template, format))
+    |> encode(format)
   end
 
   @doc """
@@ -134,10 +134,8 @@ defmodule Phoenix.Template do
     """
   end
 
-  defp template_with_ext(template, format), do: template <> "." <> format
-
-  defp encode(content, template_with_ext) do
-    if encoder = format_encoder(template_with_ext) do
+  defp encode(content, format) do
+    if encoder = Map.get(compiled_format_encoders(), "." <> format) do
       encoder.encode_to_iodata!(content)
     else
       content
@@ -165,7 +163,7 @@ defmodule Phoenix.Template do
   @compile {:inline, fallback_render: 4}
   defp fallback_render(module, template, format, assigns) do
     if function_exported?(module, :render, 2) do
-      module.render(template_with_ext(template, format), assigns)
+      module.render(template <> "." <> format, assigns)
     else
       raise ArgumentError, "no \"#{template}\" #{format} template defined for #{inspect(module)}"
     end
