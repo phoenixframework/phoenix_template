@@ -131,5 +131,10 @@ defmodule Phoenix.TemplateTest do
         Template.render_to_iodata(AllTemplates, "show_html_eex", "html", assigns)
       end
     end
+
+    test "render_to_string/4" do
+      assert Template.render_to_string(AllTemplates, "show_html_eex", "html", %{message: "hello!"}) ==
+               "<div>Show! hello!</div>\n"
+    end
   end
 end

@@ -64,6 +64,15 @@ defmodule Phoenix.Template do
   end
 
   @doc """
+  Renders the template to string.
+  """
+  def render_to_string(module, template, format, assign) do
+    module
+    |> render_to_iodata(template, format, assign)
+    |> IO.iodata_to_binary()
+  end
+
+  @doc """
   Renders template from module.
 
   For a module called `MyApp.FooHTML` and template "index.html.heex",
