@@ -311,8 +311,10 @@ defmodule Phoenix.Template do
   they will be compiled into the functions `foo/1` and `bar/1`
   that receive the template `assigns` as argument.
 
-  You may optionally pass a list of engines. If none is passed, the
-  default list returned by `engines/0` is used.
+  You may optionally pass a keyword list of engines. If a list
+  is given, we will lookup and compile only this subset of engines.
+  If none is passed (`nil`), the default list returned by `engines/0`
+  is used.
   """
   defmacro compile_all(converter, root, pattern \\ @default_pattern, engines \\ nil) do
     quote bind_quoted: binding() do
