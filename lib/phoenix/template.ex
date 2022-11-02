@@ -292,6 +292,28 @@ defmodule Phoenix.Template do
     |> :erlang.md5()
   end
 
+  @doc """
+  Compiles a function for each template in the given `root`.
+
+  `converter` is an anonymous function that receives the template path
+  and returns the function name (as a string).
+
+  For example, to compile all `.eex` templates in a given directory,
+  you might do:
+
+      Phoenix.Template.compile_all(
+        &(&1 |> Path.basename() |> Path.rootname(".eex")),
+        __DIR__,
+        "*.eex"
+      )
+
+  If the directory has templates named `foo.eex` and `bar.eex`,
+  they will be compiled into the functions `foo/1` and `bar/1`
+  that receive the template `assigns` as argument.
+
+  You may optionally pass a list of engines. If none is passed, the
+  default list returned by `engines/0` is used.
+  """
   defmacro compile_all(converter, root, pattern \\ @default_pattern, engines \\ nil) do
     quote bind_quoted: binding() do
       for {path, name, body} <-
