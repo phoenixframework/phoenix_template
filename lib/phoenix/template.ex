@@ -357,6 +357,7 @@ defmodule Phoenix.Template do
     args =
       if given_engines, do: [root, pattern, Macro.escape(given_engines)], else: [root, pattern]
 
+    Module.put_attribute(module, :external_resource, root)
     Module.put_attribute(module, :phoenix_templates_hashes, {hash, args})
     triplets
   end
