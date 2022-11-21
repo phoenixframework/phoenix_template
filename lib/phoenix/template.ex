@@ -118,10 +118,14 @@ defmodule Phoenix.Template do
 
   """
   def render(module, template, format, assigns) do
-    assigns
-    |> Map.new()
-    |> Map.pop(:layout, false)
-    |> render_within_layout(module, template, format)
+    :telemetry.span([:phoenix_template, :render], %{module: module, template: template, format: format}, fn() ->
+      result = assigns
+      |> Map.new()
+      |> Map.pop(:layout, false)
+      |> render_within_layout(module, template, format)
+
+      {result, %{}}
+    end)
   end
 
   defp render_within_layout({false, assigns}, module, template, format) do
