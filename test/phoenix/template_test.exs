@@ -28,6 +28,26 @@ defmodule Phoenix.TemplateTest do
     assert Template.format_encoder("unknown") == nil
   end
 
+  describe "embed_templates/2" do
+    defmodule EmbedTemplates do
+      import Phoenix.Template, only: [embed_templates: 1, embed_templates: 2]
+
+      embed_templates("../fixtures/templates/*.html")
+      embed_templates("../fixtures/templates/*.json", suffix: "_json")
+    end
+
+    test "embeds templates" do
+      assert EmbedTemplates.trim(%{}) == {:safe, ["12", "\n", "34", "\n", "56"]}
+
+      assert EmbedTemplates.show(%{message: "hello"}) ==
+               {:safe, ["<div>Show! ", "hello", "</div>\n"]}
+    end
+
+    test "embeds templates with suffix" do
+      assert EmbedTemplates.show_json(%{}) == %{foo: "bar"}
+    end
+  end
+
   describe "compile_all/4" do
     defmodule AllTemplates do
       Template.compile_all(

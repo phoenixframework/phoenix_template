@@ -47,12 +47,76 @@ defmodule Phoenix.Template do
 
   @default_pattern "*"
 
-  @doc false
+  @doc """
+  Ensure `__mix_recompile__?/0` will be defined.
+  """
   defmacro __using__(_opts) do
     quote do
       Phoenix.Template.__idempotent_setup__(__MODULE__, %{})
     end
   end
+
+  @doc """
+  A convenience macro for embeding templates as functions.
+
+  This macro is built on top of the more general `compile_all/3`
+  functionality.
+
+  ## Options
+
+    * `:root` - The root directory to embed files. Defaults to the current
+      module's directory (`__DIR__`)
+    * `:suffix` - The string value to append to embedded function names. By
+      default, function names will be the name of the template file excluding
+      the format and engine.
+
+  A wildcard pattern may be used to select all files within a directory tree.
+  For example, imagine a directory listing:
+
+      ├── pages
+      │   ├── about.html.heex
+      │   └── sitemap.xml.eex
+
+  Then to embed the templates in your module:
+
+      defmodule MyAppWeb.Renderer do
+        import Phoenix.Template, only: [embed_templates: 1]
+        embed_templates "pages/*"
+      end
+
+  Now, your module will have a `about/1` and `sitemap/1` functions.
+  Note that functions across different formats were embedded. In case
+  you want to distinguish between them, you can give a more specific
+  pattern:
+
+      defmodule MyAppWeb.Emails do
+        import Phoenix.Template, only: [embed_templates: 2]
+
+        embed_templates "pages/*.html", suffix: "_html"
+        embed_templates "pages/*.xml", suffix: "_xml"
+      end
+
+  Now the functions will be `about_html` and `sitemap_xml`.
+  """
+  @doc type: :macro
+  defmacro embed_templates(pattern, opts \\ []) do
+    quote bind_quoted: [pattern: pattern, opts: opts] do
+      Phoenix.Template.compile_all(
+        &Phoenix.Template.__embed__(&1, opts[:suffix]),
+        Path.expand(opts[:root] || __DIR__, __DIR__),
+        pattern
+      )
+    end
+  end
+
+  @doc false
+  def __embed__(path, suffix),
+    do:
+      path
+      |> Path.basename()
+      |> Path.rootname()
+      |> Path.rootname()
+      |> Kernel.<>(suffix || "")
 
   @doc """
   Renders the template and returns iodata.
