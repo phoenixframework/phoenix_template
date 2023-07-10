@@ -240,7 +240,7 @@ defmodule Phoenix.Template do
     else
       reason =
         if Code.ensure_loaded?(module) do
-          " (the module is defined but does define #{template}/1 nor render/2)"
+          " (the module exists but does define #{template}/1 nor render/2)"
         else
           " (the module does not exist)"
         end
