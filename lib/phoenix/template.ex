@@ -238,7 +238,12 @@ defmodule Phoenix.Template do
     if function_exported?(module, :render, 2) do
       module.render(template <> "." <> format, assigns)
     else
-      raise ArgumentError, "no \"#{template}\" #{format} template defined for #{inspect(module)}"
+      if Code.ensure_loaded?(module) do
+        raise ArgumentError,
+              "no \"#{template}\" #{format} template defined for #{inspect(module)}"
+      else
+        raise ArgumentError, "Looked for a #{inspect(module)} HTML module, but none was defined"
+      end
     end
   end
 
