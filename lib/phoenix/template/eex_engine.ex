@@ -10,7 +10,15 @@ defmodule Phoenix.Template.EExEngine do
   end
 
   defp options_for(path) do
-    "." <> format = path |> Path.rootname() |> Path.extname()
+    format =
+      case path |> Path.rootname() |> Path.extname() do
+        "." <> format ->
+          format
+
+        _ ->
+          raise ArgumentError,
+                "template paths in Phoenix require the format extension, got: #{path}"
+      end
 
     case Phoenix.Template.format_encoder(format) do
       Phoenix.HTML.Engine ->
