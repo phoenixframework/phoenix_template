@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.0.4
+
+  * Relax Phoenix.HTML dependency
+
 ## 1.0.3
 
   * Improve error message for invalid file paths
