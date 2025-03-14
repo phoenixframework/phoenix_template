@@ -20,7 +20,7 @@ defmodule Phoenix.Template do
   Once a template engine is defined, you can tell Phoenix
   about it via the template engines option:
 
-      config :phoenix, :template_engines,
+      config :phoenix_template, :template_engines,
         eex: Phoenix.Template.EExEngine,
         exs: Phoenix.Template.ExsEngine
 
