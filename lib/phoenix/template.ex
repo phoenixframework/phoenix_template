@@ -409,15 +409,14 @@ defmodule Phoenix.Template do
     engines = given_engines || engines()
     paths = find_all(root, pattern, engines)
 
-    {triplets, {paths, engines}} =
-      Enum.map_reduce(paths, {[], %{}}, fn path, {acc_paths, acc_engines} ->
+    {triplets, engines} =
+      Enum.map_reduce(paths, %{}, fn path, acc_engines ->
         ext = Path.extname(path) |> String.trim_leading(".") |> String.to_atom()
         engine = Map.fetch!(engines, ext)
         name = converter.(path)
         body = engine.compile(path, name)
-        map = {path, name, body}
-        reduce = {[path | acc_paths], Map.put(acc_engines, engine, true)}
-        {map, reduce}
+
+        {{path, name, body}, Map.put(acc_engines, engine, true)}
       end)
 
     # Store the engines so we define compile-time deps
