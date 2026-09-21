@@ -20,37 +20,46 @@ defmodule Phoenix.Template.EExEngine do
                 "template paths in Phoenix require the format extension, got: #{path}"
       end
 
-    case Phoenix.Template.format_encoder(format) do
-      Phoenix.HTML.Engine ->
-        unless Code.ensure_loaded?(Phoenix.HTML.Engine) do
-          raise "could not load Phoenix.HTML.Engine to use with .html.eex templates. " <>
-                  "You can configure your own format encoder for HTML but we recommend " <>
-                  "adding phoenix_html as a dependency as it provides XSS protection."
+    if html_format?(format) do
+      if not Code.ensure_loaded?(Phoenix.HTML.Engine) do
+        raise "could not load Phoenix.HTML.Engine to use with .#{format}.eex templates. " <>
+                "You can configure your own format encoder for HTML but we recommend " <>
+                "adding phoenix_html as a dependency as it provides XSS protection."
+      end
+
+      trim =
+        case Application.get_env(:phoenix_template, :trim_on_html_eex_engine) do
+          nil ->
+            case Application.get_env(:phoenix_view, :trim_on_html_eex_engine) do
+              nil ->
+                Application.get_env(:phoenix, :trim_on_html_eex_engine, true)
+
+              boolean ->
+                IO.warn(
+                  "config :phoenix_view, :trim_on_html_eex_engine is deprecated, please use config :phoenix_template, :trim_on_html_eex_engine instead"
+                )
+
+                boolean
+            end
+
+          boolean ->
+            boolean
         end
 
-        trim =
-          case Application.get_env(:phoenix_template, :trim_on_html_eex_engine) do
-            nil ->
-              case Application.get_env(:phoenix_view, :trim_on_html_eex_engine) do
-                nil ->
-                  Application.get_env(:phoenix, :trim_on_html_eex_engine, true)
-
-                boolean ->
-                  IO.warn(
-                    "config :phoenix_view, :trim_on_html_eex_engine is deprecated, please use config :phoenix_template, :trim_on_html_eex_engine instead"
-                  )
-
-                  boolean
-              end
-
-            boolean ->
-              boolean
-          end
-
-        [engine: Phoenix.HTML.Engine, trim: trim]
-
-      _ ->
-        [engine: EEx.SmartEngine]
+      [engine: Phoenix.HTML.Engine, trim: trim]
+    else
+      [engine: EEx.SmartEngine]
     end
+  end
+
+  defp html_format?(format) do
+    Phoenix.Template.format_encoder(format) == Phoenix.HTML.Engine or
+      format in html_formats()
+  end
+
+  defp html_formats do
+    :phoenix_template
+    |> Application.get_env(:html_formats, [])
+    |> Enum.map(&to_string/1)
   end
 end

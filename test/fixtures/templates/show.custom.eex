@@ -1,0 +1,1 @@
+<div>Custom! <%= @message %></div>

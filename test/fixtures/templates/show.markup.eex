@@ -1,0 +1,1 @@
+<div>Markup! <%= @message %></div>

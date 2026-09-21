@@ -1,3 +1,11 @@
+defmodule Phoenix.TemplateTest.MarkupEncoder do
+  def encode_to_iodata!({:safe, body}), do: ["markup:", body]
+end
+
+defmodule Phoenix.TemplateTest.CustomEncoder do
+  def encode_to_iodata!(body), do: ["custom:", body]
+end
+
 defmodule Phoenix.TemplateTest do
   use ExUnit.Case, async: true
 
@@ -74,10 +82,36 @@ defmodule Phoenix.TemplateTest do
       refute AllTemplates.__mix_recompile__?()
     end
 
+    test "compiles templates of html formats with Phoenix.HTML.Engine" do
+      assert AllTemplates.show_markup_eex(%{message: "<hello>"})
+             |> Phoenix.HTML.safe_to_string() ==
+               "<div>Markup! &lt;hello&gt;</div>\n"
+
+      assert AllTemplates.show_markup_eex(%{message: {:safe, "<hello>"}})
+             |> Phoenix.HTML.safe_to_string() ==
+               "<div>Markup! <hello></div>\n"
+
+      assigns = %{message: "<hello>"}
+
+      assert Template.render_to_string(AllTemplates, "show_markup_eex", "markup", assigns) ==
+               "markup:<div>Markup! &lt;hello&gt;</div>\n"
+    end
+
+    test "compiles templates of other formats with EEx.SmartEngine" do
+      assert AllTemplates.show_custom_eex(%{message: "<hello>"}) ==
+               "<div>Custom! <hello></div>\n"
+
+      assigns = %{message: "<hello>"}
+
+      assert Template.render_to_string(AllTemplates, "show_custom_eex", "custom", assigns) ==
+               "custom:<div>Custom! <hello></div>\n"
+    end
+
     if Version.match?(System.version(), ">= 1.12.0") do
       test "trims only compiled HTML files" do
         assert AllTemplates.no_trim_text_eex(%{}) == "12\n  34\n56\n"
         assert AllTemplates.trim_html_eex(%{}) |> Phoenix.HTML.safe_to_string() == "12\n34\n56"
+        assert AllTemplates.trim_markup_eex(%{}) |> Phoenix.HTML.safe_to_string() == "12\n34\n56"
       end
     end
 
