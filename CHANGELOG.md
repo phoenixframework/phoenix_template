@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 1.1.0
+
+  * Add `:html_formats` option
+  * Fix warnings on recent Elixir versions
+  * Export `:locals_without_parens` for `embed_templates`
+
 ## 1.0.4
 
   * Relax Phoenix.HTML dependency
