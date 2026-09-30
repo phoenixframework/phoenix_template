@@ -30,6 +30,16 @@ defmodule Phoenix.TemplateTest do
     assert is_binary(Template.hash(@templates))
   end
 
+  @tag :tmp_dir
+  test "hash/3 does not depend on where the root lives", %{tmp_dir: tmp_dir} do
+    copy = Path.join(tmp_dir, "templates")
+    File.cp_r!(@templates, copy)
+    assert Template.hash(copy) == Template.hash(@templates)
+
+    File.write!(Path.join(copy, "added.html.eex"), "")
+    refute Template.hash(copy) == Template.hash(@templates)
+  end
+
   test "format_encoder/1 returns the formatter for a given template" do
     assert Template.format_encoder("html") == Phoenix.HTML.Engine
     assert Template.format_encoder("js") == Phoenix.HTML.Engine
