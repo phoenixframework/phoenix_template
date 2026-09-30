@@ -385,7 +385,14 @@ defmodule Phoenix.Template do
   """
   @spec hash(root, pattern :: String.t(), %{atom => module}) :: binary
   def hash(root, pattern \\ @default_pattern, engines \\ engines()) do
-    find_all(root, pattern, engines)
+    hash_paths(find_all(root, pattern, engines), root)
+  end
+
+  # Paths are hashed relative to root, so the hash does not change
+  # when the project is moved or cloned to another directory.
+  defp hash_paths(paths, root) do
+    paths
+    |> Enum.map(&Path.relative_to(&1, root))
     |> Enum.sort()
     |> :erlang.md5()
   end
@@ -449,7 +456,7 @@ defmodule Phoenix.Template do
     __idempotent_setup__(module, engines)
 
     # Store the hashes so we define __mix_recompile__?
-    hash = paths |> Enum.sort() |> :erlang.md5()
+    hash = hash_paths(paths, root)
 
     args =
       if given_engines, do: [root, pattern, Macro.escape(given_engines)], else: [root, pattern]
