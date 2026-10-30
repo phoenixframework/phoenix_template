@@ -7,7 +7,7 @@ defmodule Phoenix.TemplateTest.CustomEncoder do
 end
 
 defmodule Phoenix.TemplateTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case, async: false
 
   doctest Phoenix.Template
   require Phoenix.Template, as: Template
@@ -38,6 +38,29 @@ defmodule Phoenix.TemplateTest do
 
     File.write!(Path.join(copy, "added.html.eex"), "")
     refute Template.hash(copy) == Template.hash(@templates)
+  end
+
+  @tag :tmp_dir
+  test "__mix_recompile__?/0 checks the root relative to the current directory",
+       %{tmp_dir: tmp_dir} do
+    original = Path.join(tmp_dir, "original")
+    copy = Path.join(tmp_dir, "copy")
+    File.mkdir_p!(Path.join(original, "templates"))
+    File.cp_r!(@templates, Path.join(original, "templates"))
+
+    File.cd!(original, fn ->
+      defmodule RelocatedTemplates do
+        Template.compile_all(&Path.basename/1, Path.expand("templates"), "show.*")
+      end
+    end)
+
+    File.cp_r!(original, copy)
+
+    File.cd!(copy, fn ->
+      refute Phoenix.TemplateTest.RelocatedTemplates.__mix_recompile__?()
+      File.write!(Path.join(copy, "templates/show.added.eex"), "")
+      assert Phoenix.TemplateTest.RelocatedTemplates.__mix_recompile__?()
+    end)
   end
 
   test "format_encoder/1 returns the formatter for a given template" do

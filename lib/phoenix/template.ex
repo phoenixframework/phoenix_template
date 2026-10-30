@@ -458,6 +458,11 @@ defmodule Phoenix.Template do
     # Store the hashes so we define __mix_recompile__?
     hash = hash_paths(paths, root)
 
+    # __mix_recompile__? runs in the project directory, so a root inside the
+    # project is stored relative to it. Otherwise a copy of the project (git
+    # worktree, copy-on-write clone) would look for new templates in the original.
+    root = Path.relative_to_cwd(root)
+
     args =
       if given_engines, do: [root, pattern, Macro.escape(given_engines)], else: [root, pattern]
 
